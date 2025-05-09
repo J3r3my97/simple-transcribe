@@ -3,71 +3,123 @@
 ## Technology Stack
 
 ### Frontend
-- Next.js 14
-- Tailwind CSS
-- shadcn/ui
-- React Query
-- Axios
+- **Framework**: Next.js 14
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **State Management**: React Query
+- **HTTP Client**: Axios
+- **Development**: Node.js 18+
 
 ### Backend (Node.js)
-- Express.js
-- youtube-dl/ytdl-core
-- Supabase Client
-- JWT
+- **Framework**: Express.js
+- **Language**: TypeScript
+- **Database**: Supabase (PostgreSQL)
+- **Video Processing**: ytdl-core
+- **HTTP Client**: Axios
+- **Development**: Node.js 18+
 
 ### Backend (Python)
-- FastAPI
-- pytube/youtube-dl
-- Whisper (transcription)
-- OpenAI API (summarization)
-- pydantic
-
-### Database
-- Supabase (PostgreSQL)
-- Row-level security
-- JWT authentication
-
-### Development Tools
-- Docker
-- Docker Compose
-- Git
-- VS Code/Cursor
+- **Framework**: FastAPI
+- **Language**: Python 3.9+
+- **AI Models**: 
+  - Whisper (transcription)
+  - GPT-3.5 (summarization)
+- **Video Processing**: pytube
+- **Development**: Python 3.9+
 
 ## Development Setup
 
 ### Prerequisites
-- Node.js 18+
-- Python 3.9+
-- Docker
-- Git
-- Supabase account
-- OpenAI API key
-- fly.io account
-
-### Local Environment
-1. Clone repository
-2. Install dependencies
-3. Set up environment variables
-4. Start Docker containers
-5. Run development servers
+1. Node.js 18+
+2. Python 3.9+
+3. Supabase account
+4. OpenAI API key
 
 ### Environment Variables
-```env
-# Frontend
-NEXT_PUBLIC_API_URL=
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
+1. **Frontend** (.env.local)
+   ```
+   NEXT_PUBLIC_API_URL=http://localhost:3001
+   ```
 
-# Node.js Backend
-PORT=
-SUPABASE_URL=
-SUPABASE_SERVICE_KEY=
-PYTHON_SERVICE_URL=
+2. **Node.js Backend** (.env)
+   ```
+   PORT=3001
+   SUPABASE_URL=your_supabase_url
+   SUPABASE_SERVICE_KEY=your_supabase_key
+   PYTHON_SERVICE_URL=http://localhost:8000
+   ```
 
-# Python Backend
-OPENAI_API_KEY=
-MODEL_TYPE=
-```
+3. **Python Backend** (.env)
+   ```
+   OPENAI_API_KEY=your_openai_key
+   ```
+
+### Installation Steps
+1. **Frontend**
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
+
+2. **Node.js Backend**
+   ```bash
+   cd backend/node-service
+   npm install
+   npm run dev
+   ```
+
+3. **Python Backend**
+   ```bash
+   cd backend/python-service
+   python -m venv venv
+   source venv/bin/activate  # or `venv\Scripts\activate` on Windows
+   pip install -r requirements.txt
+   uvicorn main:app --reload
+   ```
+
+## Database Schema
+
+### Tables
+1. **videos**
+   - id (UUID)
+   - youtube_id (TEXT)
+   - title (TEXT)
+   - url (TEXT)
+   - thumbnail (TEXT)
+   - status (TEXT)
+   - created_at (TIMESTAMP)
+   - updated_at (TIMESTAMP)
+
+2. **transcripts**
+   - id (UUID)
+   - video_id (UUID)
+   - text (TEXT)
+   - created_at (TIMESTAMP)
+
+3. **summaries**
+   - id (UUID)
+   - video_id (UUID)
+   - text (TEXT)
+   - created_at (TIMESTAMP)
+
+## API Endpoints
+
+### Node.js Backend
+1. **POST /api/process-video**
+   - Input: `{ url: string }`
+   - Output: Video metadata
+
+2. **GET /api/summary/:videoId**
+   - Output: Video details with transcript and summary
+
+### Python Backend
+1. **POST /process**
+   - Input: `{ video_id: string, url: string }`
+   - Output: Processing results
+
+2. **GET /health**
+   - Output: Service status
 
 ## Dependencies
 
@@ -76,11 +128,11 @@ MODEL_TYPE=
 {
   "dependencies": {
     "next": "^14.0.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "tailwindcss": "^3.3.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
     "@tanstack/react-query": "^5.0.0",
-    "axios": "^1.6.0"
+    "axios": "^1.0.0",
+    "tailwindcss": "^3.0.0"
   }
 }
 ```
@@ -89,23 +141,30 @@ MODEL_TYPE=
 ```json
 {
   "dependencies": {
-    "express": "^4.18.0",
-    "ytdl-core": "^4.11.0",
+    "express": "^4.0.0",
     "@supabase/supabase-js": "^2.0.0",
-    "jsonwebtoken": "^9.0.0"
+    "ytdl-core": "^4.0.0",
+    "axios": "^1.0.0"
   }
 }
 ```
 
 ### Python Backend
 ```txt
-fastapi==0.104.0
-uvicorn==0.24.0
-pytube==15.0.0
-openai==1.3.0
-whisper==1.1.10
-pydantic==2.4.0
+fastapi==0.100.0
+uvicorn==0.23.0
+openai==1.0.0
+whisper==1.0.0
+pytube==12.0.0
+python-dotenv==1.0.0
 ```
+
+## Development Tools
+1. **Version Control**: Git
+2. **Package Management**: npm, pip
+3. **Code Quality**: ESLint, Prettier
+4. **Testing**: Jest, Pytest
+5. **API Testing**: Postman/Insomnia
 
 ## Technical Constraints
 1. API rate limits

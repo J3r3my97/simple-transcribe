@@ -1,71 +1,126 @@
 # System Patterns
 
 ## Architecture Overview
-The application follows a microservices architecture with three main components:
-1. Frontend (Next.js)
-2. Node.js Backend (Express)
-3. Python Backend (FastAPI)
-
-## Component Relationships
 ```mermaid
 graph TD
-    A[Frontend] --> B[Node.js Backend]
-    B --> C[Python Backend]
-    B --> D[Supabase]
-    C --> E[AI Services]
+    FE[Frontend] --> BE[Node.js Backend]
+    BE --> DB[(Supabase DB)]
+    BE --> PS[Python Service]
+    PS --> AI[AI Models]
 ```
 
+## Component Relationships
+
+### Frontend (Next.js)
+- **Page Component**
+  - Handles user input
+  - Manages state with React Query
+  - Displays results and status
+
+- **Providers**
+  - React Query provider
+  - Global state management
+  - API client configuration
+
+### Backend (Node.js)
+- **API Routes**
+  - `/api/process-video` - Video processing
+  - `/api/summary/:videoId` - Results retrieval
+
+- **Services**
+  - VideoService - Orchestrates processing
+  - YouTube metadata extraction
+  - Python service communication
+
+- **Repositories**
+  - VideoRepository - Database operations
+  - Data persistence patterns
+  - Error handling
+
+### Backend (Python)
+- **API Endpoints**
+  - `/process` - Video processing
+  - `/health` - Service health check
+
+- **Processing Pipeline**
+  1. Audio download
+  2. Transcription
+  3. Summary generation
+
 ## Design Patterns
-1. Service Layer Pattern
-   - Separation of concerns between services
-   - Clear API boundaries
-   - Modular AI service implementation
 
-2. Repository Pattern
-   - Database access abstraction
-   - Centralized data operations
-   - Consistent error handling
+### Repository Pattern
+- Abstracts database operations
+- Centralizes data access
+- Provides type safety
 
-3. Factory Pattern
-   - AI model selection and initialization
-   - Service creation and configuration
-   - Extensible model switching
+### Service Pattern
+- Business logic encapsulation
+- Cross-service communication
+- Error handling
 
-## Technical Decisions
-1. Frontend
-   - Next.js for React framework
-   - Tailwind CSS for styling
-   - shadcn/ui for components
-   - React Query for data management
+### Provider Pattern
+- Global state management
+- API client configuration
+- React Query integration
 
-2. Backend
-   - Express.js for API routing
-   - FastAPI for AI processing
-   - Modular AI service architecture
-   - Docker for containerization
+## Data Flow
+1. User submits YouTube URL
+2. Frontend sends to Node.js backend
+3. Node.js:
+   - Validates URL
+   - Creates database record
+   - Sends to Python service
+4. Python:
+   - Downloads audio
+   - Generates transcript
+   - Creates summary
+5. Node.js:
+   - Updates database
+   - Returns results
+6. Frontend:
+   - Polls for updates
+   - Displays results
 
-3. Database
-   - Supabase for PostgreSQL
-   - Row-level security
-   - JWT authentication
+## Error Handling
+1. **Frontend**
+   - Form validation
+   - API error handling
+   - Loading states
 
-## API Design
-1. RESTful endpoints
-2. Consistent error responses
-3. Rate limiting
-4. Input validation
-5. Authentication middleware
+2. **Backend**
+   - Input validation
+   - Service error handling
+   - Database error handling
+
+3. **Python Service**
+   - Download errors
+   - Processing errors
+   - API errors
 
 ## Security Patterns
-1. JWT authentication
-2. API key protection
-3. CORS configuration
-4. Rate limiting
-5. Input sanitization
+1. **API Security**
+   - CORS configuration
+   - Rate limiting
+   - Input validation
 
-## Deployment Strategy
-1. Frontend: Vercel
-2. Backend: fly.io
-3. Database: Supabase
-4. Docker containers
-5. Environment-based configuration 
+2. **Data Security**
+   - Secure storage
+   - API key protection
+   - Environment variables
+
+## Testing Strategy
+1. **Frontend**
+   - Component testing
+   - Integration testing
+   - E2E testing
+
+2. **Backend**
+   - Unit testing
+   - Integration testing
+   - API testing
+
+3. **Python Service**
+   - Unit testing
+   - Integration testing
+   - Model testing 
