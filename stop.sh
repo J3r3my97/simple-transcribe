@@ -30,14 +30,7 @@ docker-compose down
 # Check if services stopped successfully
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}Services stopped successfully!${NC}"
-    
-    # Optional: Remove unused containers, networks, and images
-    read -p "Do you want to remove unused containers, networks, and images? (y/n) " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        echo -e "${GREEN}Cleaning up...${NC}"
-        docker system prune -f
-    fi
+    docker system prune -f
 else
     echo -e "${RED}Failed to stop services${NC}"
     exit 1

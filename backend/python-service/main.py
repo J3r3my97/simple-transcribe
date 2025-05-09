@@ -1,104 +1,142 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
 import os
 from dotenv import load_dotenv
-import openai
-from pytube import YouTube
+import anthropic
+import yt_dlp
 import tempfile
-import asyncio
-from concurrent.futures import ThreadPoolExecutor
-import whisper
+import logging
+import httpx
+import json
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
 app = FastAPI()
 
-# Initialize OpenAI client
-openai.api_key = os.getenv("OPENAI_API_KEY")
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, replace with specific origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-# Initialize Whisper model
-model = whisper.load_model("base")
+# Initialize Anthropic client
+anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
+if not anthropic_api_key:
+    logger.error("ANTHROPIC_API_KEY environment variable is not set!")
+    raise ValueError("ANTHROPIC_API_KEY environment variable is not set!")
 
-class VideoRequest(BaseModel):
-    url: str
-    video_id: Optional[str] = None
+# Create a custom HTTP client without proxies
+http_client = httpx.Client(timeout=30.0)
+client = anthropic.Anthropic(
+    api_key=anthropic_api_key,
+    http_client=http_client
+)
 
-class VideoResponse(BaseModel):
+# Define request and response models
+class ProcessRequest(BaseModel):
     video_id: str
-    status: str
-    transcript: Optional[str] = None
-    summary: Optional[str] = None
+    url: str
 
-def download_audio(url: str) -> str:
-    """Download audio from YouTube video and return the file path."""
+class ProcessResponse(BaseModel):
+    video_id: str
+    transcript: str
+    summary: str
+    status: str = "completed"
+
+def get_video_info(url: str) -> dict:
+    """Get video information including transcript if available."""
+    logger.info(f"Getting video info for URL: {url}")
     try:
-        yt = YouTube(url)
-        audio_stream = yt.streams.filter(only_audio=True).first()
+        ydl_opts = {
+            'writesubtitles': True,
+            'writeautomaticsub': True,
+            'subtitleslangs': ['en'],
+            'skip_download': True,
+            'quiet': True,
+            'no_warnings': True,
+        }
         
-        # Create temporary file
-        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp4')
-        temp_file.close()
-        
-        # Download audio
-        audio_stream.download(filename=temp_file.name)
-        return temp_file.name
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=False)
+            return info
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to download audio: {str(e)}")
+        logger.error(f"Failed to get video info: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get video info: {str(e)}")
 
-def transcribe_audio(audio_path: str) -> str:
-    """Transcribe audio using Whisper."""
+async def generate_summary(transcript: str) -> str:
+    """Generate summary using Claude."""
+    logger.info("Generating summary with Claude...")
     try:
-        result = model.transcribe(audio_path)
-        return result["text"]
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to transcribe audio: {str(e)}")
-
-def generate_summary(transcript: str) -> str:
-    """Generate summary using OpenAI API."""
-    try:
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+        response = client.messages.create(
+            model="claude-3-haiku-20240307",
+            max_tokens=1000,
             messages=[
-                {"role": "system", "content": "You are a helpful assistant that summarizes video transcripts."},
-                {"role": "user", "content": f"Please provide a concise summary of the following transcript:\n\n{transcript}"}
-            ],
-            max_tokens=150
+                {
+                    "role": "user",
+                    "content": f"Please provide a concise summary of the following transcript:\n\n{transcript}"
+                }
+            ]
         )
-        return response.choices[0].message.content
+        return response.content[0].text
     except Exception as e:
+        logger.error(f"Failed to generate summary: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to generate summary: {str(e)}")
 
-@app.get("/health")
-async def health_check():
-    return {"status": "ok"}
-
-@app.post("/process", response_model=VideoResponse)
-async def process_video(request: VideoRequest):
+# Process endpoint
+@app.post("/process", response_model=ProcessResponse)
+async def process_video(request: ProcessRequest):
     try:
-        # Download audio
-        audio_path = download_audio(request.url)
+        logger.info(f"Received process request for video_id: {request.video_id}")
         
-        try:
-            # Transcribe audio
-            transcript = transcribe_audio(audio_path)
-            
-            # Generate summary
-            summary = generate_summary(transcript)
-            
-            return VideoResponse(
-                video_id=request.video_id,
-                status="completed",
-                transcript=transcript,
-                summary=summary
-            )
-        finally:
-            # Clean up temporary file
-            if os.path.exists(audio_path):
-                os.unlink(audio_path)
+        # Get video info and transcript
+        video_info = get_video_info(request.url)
+        
+        # Try to get transcript from video info
+        transcript = ""
+        if 'subtitles' in video_info and 'en' in video_info['subtitles']:
+            # Get the first available English subtitle
+            subtitle_url = video_info['subtitles']['en'][0]['url']
+            async with httpx.AsyncClient() as client:
+                response = await client.get(subtitle_url)
+                if response.status_code == 200:
+                    # Parse the subtitle data and extract text
+                    subtitle_data = response.text
+                    # Simple parsing of subtitle data (you might need to adjust this based on the format)
+                    transcript = subtitle_data.replace('\n', ' ').strip()
+        
+        if not transcript:
+            # If no transcript is available, use the video description
+            transcript = video_info.get('description', '')
+        
+        # Generate summary
+        summary = await generate_summary(transcript)
+        
+        response = ProcessResponse(
+            video_id=request.video_id,
+            transcript=transcript,
+            summary=summary,
+            status="completed"
+        )
+        logger.info(f"Sending response for video_id {request.video_id}: {response}")
+        return response
                 
     except Exception as e:
+        logger.error(f"Error processing video: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+# Health check endpoint
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
 
 if __name__ == "__main__":
     import uvicorn

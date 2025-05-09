@@ -40,3 +40,4 @@ services:
       - ./backend/python-service:/app
     environment:
       - PYTHONUNBUFFERED=1
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}

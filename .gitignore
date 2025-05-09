@@ -75,3 +75,4 @@ models/
 *.mov
 *.flv
 *.mkv 
+.env
