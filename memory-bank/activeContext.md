@@ -1,33 +1,69 @@
 # Active Context
 
 ## Current Focus
-- Video processing pipeline is now working end-to-end
-- Frontend-backend integration is complete
-- Real-time status updates and polling mechanism is implemented
+- Preparing for production deployment
+- Implementing authentication and security measures
+- Setting up CI/CD pipeline
 
 ## Recent Changes
-1. Fixed frontend polling logic to continue until both transcript and summary are available
-2. Added detailed logging throughout the application for better debugging
-3. Updated response format in Node.js backend to match frontend expectations
-4. Improved error handling and status reporting
+1. Fixed environment variable configuration
+   - Removed root .env dependency
+   - Configured service-specific .env files
+   - Fixed Python backend API key issue
+
+2. Improved service communication
+   - Updated Docker Compose configuration
+   - Fixed service dependencies
+   - Enhanced error handling
 
 ## Active Decisions
-- Using polling with 2-second intervals for status updates
-- Maintaining separate transcript and summary tables in Supabase
-- Using yt-dlp for more reliable YouTube video processing
-- Implementing background processing for video analysis
+- Using Vercel for frontend deployment
+- Using Fly.io for backend services
+- Implementing Supabase Auth for authentication
+- Using built-in secrets management for each platform
+- No custom domain for initial deployment
+- Implementing CI/CD with GitHub Actions
 
 ## Next Steps
-1. Add error handling for failed video processing
-2. Implement retry mechanism for failed API calls
-3. Add user feedback for processing status
-4. Consider implementing WebSocket for real-time updates instead of polling
+1. Phase 1: Authentication Setup
+   - Implement Supabase Auth
+   - Add login/signup functionality
+   - Protect API endpoints
+   - Add JWT validation
+
+2. Phase 2: Environment & Secrets Configuration
+   - Configure Vercel environment variables
+   - Set up Fly.io secrets
+   - Update service configurations
+
+3. Phase 3: Backend Deployment (Fly.io)
+   - Prepare production Dockerfiles
+   - Deploy Node.js backend
+   - Deploy Python backend
+
+4. Phase 4: Frontend Deployment (Vercel)
+   - Update Next.js configuration
+   - Deploy to Vercel
+   - Configure environment variables
+
+5. Phase 5: CI/CD Setup
+   - Set up GitHub Actions
+   - Configure deployment workflows
+   - Add basic testing
+
+6. Phase 6: Security & Access Control
+   - Implement rate limiting
+   - Add request validation
+   - Set up CORS
+   - Configure JWT validation
 
 ## Current Considerations
-- Need to monitor performance of polling mechanism
-- Consider adding rate limiting for API endpoints
-- May need to optimize database queries for better performance
-- Should add more comprehensive error handling
+- Need to ensure secure API key management
+- Must implement proper authentication before deployment
+- Should set up monitoring for production services
+- Need to consider rate limiting to prevent abuse
+- Should implement proper error handling for production
+- Need to ensure secure communication between services
 
 ## Development Environment
 1. **Frontend**
