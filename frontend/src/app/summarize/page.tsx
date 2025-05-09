@@ -114,7 +114,7 @@ export default function Summarize() {
     const handleSignOut = async () => {
         try {
             await signOut();
-            router.push('/auth/signin');
+            window.location.href = '/auth/signin';
         } catch (error) {
             console.error('Error signing out:', error);
         }
