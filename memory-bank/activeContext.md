@@ -1,61 +1,33 @@
 # Active Context
 
 ## Current Focus
-1. Frontend Development
-   - Main page component implementation
-   - React Query integration
-   - Error handling and loading states
-
-2. Backend Integration
-   - API endpoint implementation
-   - Data flow between services
-   - Error handling
+- Video processing pipeline is now working end-to-end
+- Frontend-backend integration is complete
+- Real-time status updates and polling mechanism is implemented
 
 ## Recent Changes
-1. **Frontend**
-   - Implemented main page component
-   - Added React Query provider
-   - Set up environment variables
-   - Added TypeScript interfaces
-
-2. **Backend**
-   - Implemented video processing endpoints
-   - Set up Supabase integration
-   - Added Python service communication
+1. Fixed frontend polling logic to continue until both transcript and summary are available
+2. Added detailed logging throughout the application for better debugging
+3. Updated response format in Node.js backend to match frontend expectations
+4. Improved error handling and status reporting
 
 ## Active Decisions
-1. **Frontend Architecture**
-   - Using React Query for data fetching
-   - Implementing polling for status updates
-   - Using TypeScript for type safety
-
-2. **Backend Architecture**
-   - Microservices approach
-   - Supabase for data storage
-   - Python service for AI processing
-
-## Current Issues
-1. **TypeScript Errors**
-   - React Query type definitions
-   - Mutation result types
-   - Query data types
-
-2. **SQL Linter Errors**
-   - PostgreSQL specific syntax
-   - Schema validation
+- Using polling with 2-second intervals for status updates
+- Maintaining separate transcript and summary tables in Supabase
+- Using yt-dlp for more reliable YouTube video processing
+- Implementing background processing for video analysis
 
 ## Next Steps
-1. **Frontend**
-   - Add URL validation
-   - Implement error handling
-   - Add loading components
-   - Improve UI styling
+1. Add error handling for failed video processing
+2. Implement retry mechanism for failed API calls
+3. Add user feedback for processing status
+4. Consider implementing WebSocket for real-time updates instead of polling
 
-2. **Backend**
-   - Add input validation
-   - Implement error handling
-   - Add logging
-   - Set up monitoring
+## Current Considerations
+- Need to monitor performance of polling mechanism
+- Consider adding rate limiting for API endpoints
+- May need to optimize database queries for better performance
+- Should add more comprehensive error handling
 
 ## Development Environment
 1. **Frontend**

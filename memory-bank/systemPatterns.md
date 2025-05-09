@@ -3,111 +3,91 @@
 ## Architecture Overview
 ```mermaid
 graph TD
-    FE[Frontend] --> BE[Node.js Backend]
-    BE --> DB[(Supabase DB)]
-    BE --> PS[Python Service]
-    PS --> AI[AI Models]
+    A[Frontend] --> B[Node.js Backend]
+    B --> C[Python Backend]
+    B --> D[Supabase]
+    C --> E[YouTube API]
+    C --> F[Claude API]
 ```
 
 ## Component Relationships
+1. **Frontend (Next.js)**
+   - React Query for data fetching
+   - Polling mechanism for status updates
+   - TypeScript for type safety
+   - Tailwind CSS for styling
 
-### Frontend (Next.js)
-- **Page Component**
-  - Handles user input
-  - Manages state with React Query
-  - Displays results and status
+2. **Node.js Backend**
+   - Express.js for API routing
+   - Repository pattern for database access
+   - Service layer for business logic
+   - Background processing for video analysis
 
-- **Providers**
-  - React Query provider
-  - Global state management
-  - API client configuration
+3. **Python Backend**
+   - FastAPI for API endpoints
+   - yt-dlp for video processing
+   - Claude API for summarization
+   - Async processing for long-running tasks
 
-### Backend (Node.js)
-- **API Routes**
-  - `/api/process-video` - Video processing
-  - `/api/summary/:videoId` - Results retrieval
-
-- **Services**
-  - VideoService - Orchestrates processing
-  - YouTube metadata extraction
-  - Python service communication
-
-- **Repositories**
-  - VideoRepository - Database operations
-  - Data persistence patterns
-  - Error handling
-
-### Backend (Python)
-- **API Endpoints**
-  - `/process` - Video processing
-  - `/health` - Service health check
-
-- **Processing Pipeline**
-  1. Audio download
-  2. Transcription
-  3. Summary generation
+4. **Database (Supabase)**
+   - PostgreSQL for data storage
+   - Separate tables for videos, transcripts, and summaries
+   - Foreign key relationships
+   - Timestamps for tracking
 
 ## Design Patterns
+1. **Repository Pattern**
+   - Abstract database operations
+   - Centralize data access logic
+   - Handle database errors consistently
 
-### Repository Pattern
-- Abstracts database operations
-- Centralizes data access
-- Provides type safety
+2. **Service Layer Pattern**
+   - Business logic encapsulation
+   - Cross-cutting concerns
+   - Error handling and logging
 
-### Service Pattern
-- Business logic encapsulation
-- Cross-service communication
-- Error handling
+3. **Background Processing**
+   - Asynchronous task handling
+   - Status tracking
+   - Error recovery
 
-### Provider Pattern
-- Global state management
-- API client configuration
-- React Query integration
+4. **Polling Pattern**
+   - Status updates
+   - Progress tracking
+   - Real-time UI updates
 
 ## Data Flow
-1. User submits YouTube URL
-2. Frontend sends to Node.js backend
-3. Node.js:
-   - Validates URL
-   - Creates database record
-   - Sends to Python service
-4. Python:
-   - Downloads audio
-   - Generates transcript
-   - Creates summary
-5. Node.js:
-   - Updates database
-   - Returns results
-6. Frontend:
-   - Polls for updates
-   - Displays results
+1. **Video Processing**
+   ```
+   Frontend -> Node.js -> Python -> YouTube -> Claude -> Supabase -> Frontend
+   ```
+
+2. **Status Updates**
+   ```
+   Frontend -> Node.js -> Supabase -> Frontend
+   ```
 
 ## Error Handling
 1. **Frontend**
-   - Form validation
-   - API error handling
+   - React Query error states
+   - User-friendly error messages
    - Loading states
 
 2. **Backend**
-   - Input validation
-   - Service error handling
-   - Database error handling
-
-3. **Python Service**
-   - Download errors
-   - Processing errors
-   - API errors
+   - Try-catch blocks
+   - Error logging
+   - Status tracking
 
 ## Security Patterns
 1. **API Security**
-   - CORS configuration
-   - Rate limiting
+   - Environment variables
+   - API key protection
    - Input validation
 
 2. **Data Security**
-   - Secure storage
-   - API key protection
-   - Environment variables
+   - Database constraints
+   - Type safety
+   - Error handling
 
 ## Testing Strategy
 1. **Frontend**
