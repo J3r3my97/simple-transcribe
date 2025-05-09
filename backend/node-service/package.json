@@ -26,7 +26,8 @@
     "morgan": "^1.10.0",
     "uuid": "^11.1.0",
     "winston": "^3.17.0",
-    "ytdl-core": "^4.11.0"
+    "youtube-dl-exec": "^3.0.21",
+    "ytdl-core": "^4.11.5"
   },
   "devDependencies": {
     "@types/cors": "^2.8.13",

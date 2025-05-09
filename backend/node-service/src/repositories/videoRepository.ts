@@ -76,34 +76,79 @@ export class VideoRepository {
         transcript: Transcript | null;
         summary: Summary | null;
     }> {
+        console.log('[VideoRepository] Getting video details for ID:', id);
+
         const { data: video, error: videoError } = await this.supabase
             .from('videos')
             .select()
             .eq('id', id)
             .single();
 
-        if (videoError) throw videoError;
+        if (videoError) {
+            console.error('[VideoRepository] Error fetching video:', videoError);
+            throw videoError;
+        }
+        console.log('[VideoRepository] Found video:', video.id);
 
-        const { data: transcript, error: transcriptError } = await this.supabase
-            .from('transcripts')
-            .select()
-            .eq('video_id', id)
-            .single();
+        let transcript = null;
+        let summary = null;
 
-        if (transcriptError && transcriptError.code !== 'PGRST116') throw transcriptError;
+        try {
+            const { data: transcriptData, error: transcriptError } = await this.supabase
+                .from('transcripts')
+                .select()
+                .eq('video_id', id)
+                .single();
 
-        const { data: summary, error: summaryError } = await this.supabase
-            .from('summaries')
-            .select()
-            .eq('video_id', id)
-            .single();
+            if (transcriptError) {
+                if (transcriptError.code === 'PGRST116') {
+                    console.log('[VideoRepository] No transcript found for video:', id);
+                } else {
+                    console.error('[VideoRepository] Error fetching transcript:', transcriptError);
+                    throw transcriptError;
+                }
+            } else {
+                console.log('[VideoRepository] Found transcript for video:', id);
+                transcript = transcriptData;
+            }
+        } catch (error) {
+            console.error('[VideoRepository] Unexpected error fetching transcript:', error);
+            // Don't throw here, we want to continue and try to get the summary
+        }
 
-        if (summaryError && summaryError.code !== 'PGRST116') throw summaryError;
+        try {
+            const { data: summaryData, error: summaryError } = await this.supabase
+                .from('summaries')
+                .select()
+                .eq('video_id', id)
+                .single();
+
+            if (summaryError) {
+                if (summaryError.code === 'PGRST116') {
+                    console.log('[VideoRepository] No summary found for video:', id);
+                } else {
+                    console.error('[VideoRepository] Error fetching summary:', summaryError);
+                    throw summaryError;
+                }
+            } else {
+                console.log('[VideoRepository] Found summary for video:', id);
+                summary = summaryData;
+            }
+        } catch (error) {
+            console.error('[VideoRepository] Unexpected error fetching summary:', error);
+            // Don't throw here, we want to return what we have
+        }
+
+        console.log('[VideoRepository] Returning video details:', {
+            videoId: video.id,
+            hasTranscript: !!transcript,
+            hasSummary: !!summary
+        });
 
         return {
             video,
-            transcript: transcript || null,
-            summary: summary || null,
+            transcript,
+            summary,
         };
     }
 } 

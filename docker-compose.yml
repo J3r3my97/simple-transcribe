@@ -26,6 +26,7 @@ services:
       - /app/node_modules
     environment:
       - NODE_ENV=development
+      - PYTHON_SERVICE_URL=http://python-backend:8000
     depends_on:
       - python-backend
 
