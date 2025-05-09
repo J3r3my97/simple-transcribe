@@ -45,12 +45,15 @@ app.get('/health', (req, res) => {
 
 app.post('/api/process-video', async (req, res) => {
     try {
-        const { url } = req.body;
+        const { url, userId } = req.body;
         if (!url) {
             return res.status(400).json({ error: 'URL is required' });
         }
+        if (!userId) {
+            return res.status(400).json({ error: 'User ID is required' });
+        }
 
-        const video = await videoService.processVideo(url);
+        const video = await videoService.processVideo(url, userId);
         res.json(video);
     } catch (error) {
         console.error('Error processing video:', error);

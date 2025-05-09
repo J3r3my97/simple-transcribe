@@ -7,6 +7,7 @@ export interface Video {
     url: string;
     thumbnail: string | null;
     status: VideoStatus;
+    user_id: string;
     created_at: string;
     updated_at: string;
 }

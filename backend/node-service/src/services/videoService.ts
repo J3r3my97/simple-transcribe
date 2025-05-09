@@ -29,7 +29,7 @@ export class VideoService {
         console.log('[VideoService] Initialized with Python service URL:', pythonServiceUrl);
     }
 
-    async processVideo(url: string): Promise<Video> {
+    async processVideo(url: string, userId: string): Promise<Video> {
         console.log('[VideoService] Starting to process video:', url);
         try {
             // Extract video ID from URL
@@ -73,11 +73,11 @@ export class VideoService {
             // Try youtube-dl-exec first as it's more reliable
             try {
                 console.log('[VideoService] Attempting to process with youtube-dl-exec');
-                return await this.processWithYoutubeDl(url, videoId);
+                return await this.processWithYoutubeDl(url, videoId, userId);
             } catch (error) {
                 console.log('[VideoService] youtube-dl-exec failed:', error);
                 console.log('[VideoService] Falling back to ytdl-core');
-                return await this.processWithYtdl(url, videoId);
+                return await this.processWithYtdl(url, videoId, userId);
             }
         } catch (error) {
             console.error('[VideoService] Failed to process video:', error);
@@ -104,7 +104,7 @@ export class VideoService {
         return null;
     }
 
-    private async processWithYtdl(url: string, videoId: string): Promise<Video> {
+    private async processWithYtdl(url: string, videoId: string, userId: string): Promise<Video> {
         console.log('[VideoService] Processing with ytdl-core:', url);
         const videoInfo = await ytdl.getInfo(url);
         console.log('[VideoService] Got video info from ytdl-core:', {
@@ -119,6 +119,7 @@ export class VideoService {
             url,
             thumbnail: videoInfo.videoDetails.thumbnails[0]?.url || null,
             status: 'processing',
+            user_id: userId
         });
         console.log('[VideoService] Created video record:', video.id);
 
@@ -130,7 +131,7 @@ export class VideoService {
         return video;
     }
 
-    private async processWithYoutubeDl(url: string, videoId: string): Promise<Video> {
+    private async processWithYoutubeDl(url: string, videoId: string, userId: string): Promise<Video> {
         console.log('[VideoService] Processing with youtube-dl-exec:', url);
         const videoInfo = await youtubeDl(url, {
             dumpJson: true,
@@ -156,6 +157,7 @@ export class VideoService {
             url,
             thumbnail: videoInfo.thumbnail || null,
             status: 'processing',
+            user_id: userId
         });
         console.log('[VideoService] Created video record:', video.id);
 
@@ -178,7 +180,7 @@ export class VideoService {
             }
 
             console.log('[VideoService] Sending request to Python service for video:', videoId);
-            const response = await axios.post<PythonServiceResponse>(`${this.pythonServiceUrl}/process`, {
+            const response = await axios.post<PythonServiceResponse>(`${this.pythonServiceUrl}/api/process-video`, {
                 video_id: videoId,
                 url: video.url,
             });

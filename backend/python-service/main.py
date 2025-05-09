@@ -92,7 +92,7 @@ async def generate_summary(transcript: str) -> str:
         raise HTTPException(status_code=500, detail=f"Failed to generate summary: {str(e)}")
 
 # Process endpoint
-@app.post("/process", response_model=ProcessResponse)
+@app.post("/api/process-video", response_model=ProcessResponse)
 async def process_video(request: ProcessRequest):
     try:
         logger.info(f"Received process request for video_id: {request.video_id}")

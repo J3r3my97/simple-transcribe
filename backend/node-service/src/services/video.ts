@@ -3,6 +3,7 @@ import logger from './logger';
 
 interface VideoStatus {
     id: string;
+    userId: string;
     status: 'pending' | 'processing' | 'completed' | 'failed';
     url: string;
     title?: string;
@@ -14,12 +15,13 @@ interface VideoStatus {
 // In-memory storage for demo purposes
 const videos = new Map<string, VideoStatus>();
 
-export async function processVideo(url: string): Promise<string> {
+export async function processVideo(url: string, userId: string): Promise<string> {
     const videoId = uuidv4();
 
     // Store initial video status
     videos.set(videoId, {
         id: videoId,
+        userId,
         status: 'pending',
         url
     });
@@ -27,7 +29,7 @@ export async function processVideo(url: string): Promise<string> {
     // Simulate async processing
     setTimeout(async () => {
         try {
-            logger.info('Starting video processing', { videoId });
+            logger.info('Starting video processing', { videoId, userId });
 
             // Update status to processing
             videos.set(videoId, {
@@ -50,10 +52,11 @@ export async function processVideo(url: string): Promise<string> {
                 summary: 'Sample summary...'
             });
 
-            logger.info('Video processing completed', { videoId });
+            logger.info('Video processing completed', { videoId, userId });
         } catch (error) {
             logger.error('Video processing failed', {
                 videoId,
+                userId,
                 error: error instanceof Error ? error.message : 'Unknown error'
             });
 
@@ -68,10 +71,13 @@ export async function processVideo(url: string): Promise<string> {
     return videoId;
 }
 
-export async function getVideoStatus(videoId: string): Promise<VideoStatus> {
+export async function getVideoStatus(videoId: string, userId: string): Promise<VideoStatus> {
     const video = videos.get(videoId);
     if (!video) {
         throw new Error('Video not found');
+    }
+    if (video.userId !== userId) {
+        throw new Error('Unauthorized access to video');
     }
     return video;
 } 
