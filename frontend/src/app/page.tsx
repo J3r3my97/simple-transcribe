@@ -6,15 +6,17 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export default function Home() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
 
   useEffect(() => {
-    if (user) {
-      router.replace('/summarize');
-    } else {
-      router.replace('/auth/signin');
+    if (!loading) {
+      if (user) {
+        router.replace('/summarize');
+      } else {
+        router.replace('/auth/signin');
+      }
     }
-  }, [user, router]);
+  }, [user, router, loading]);
 
   return (
     <div className="min-h-screen flex items-center justify-center">
