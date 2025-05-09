@@ -3,12 +3,12 @@ from pydantic import BaseModel
 from typing import Optional
 import os
 from dotenv import load_dotenv
-import whisper
 import openai
 from pytube import YouTube
 import tempfile
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
+import whisper
 
 load_dotenv()
 
