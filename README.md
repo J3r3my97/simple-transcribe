@@ -1,103 +1,217 @@
-# YouTube Summary App
+# YouTube Video Summarizer
 
-A web application that allows users to paste a YouTube video URL and receive an AI-generated summary of the video content.
+A web application that allows users to paste a YouTube video URL and receive an AI-generated summary of the video content. The application extracts audio from the video, transcribes it, and generates a concise summary.
 
-## Project Structure
+## Features
 
-```
-simple-transcribe/
-├── frontend/                 # Next.js frontend
-├── backend/
-│   ├── node-service/        # Express backend
-│   └── python-service/      # FastAPI backend
-├── docker/                  # Docker configurations
-└── docs/                    # Documentation
-```
+- YouTube video URL processing
+- Audio extraction and transcription
+- AI-powered summary generation
+- Real-time processing status updates
+- Clean, responsive UI
+- Comprehensive logging and monitoring
+
+## Tech Stack
+
+### Frontend
+- Next.js
+- React
+- Tailwind CSS
+- React Query
+- Axios
+
+### Backend
+- Node.js/Express
+- Python FastAPI
+- Winston (Logging)
+- Morgan (HTTP Request Logging)
+
+### Storage
+- Supabase (PostgreSQL)
 
 ## Prerequisites
 
-- Node.js 18+
-- Python 3.9+
-- Docker and Docker Compose
+- Node.js (v18 or higher)
+- Python (v3.9 or higher)
+- npm or yarn
+- Docker (for deployment)
 - Supabase account
-- OpenAI API key
-- fly.io account
 
-## Environment Setup
+## Local Development
 
-1. Clone the repository
-2. Copy `.env.example` to `.env` and fill in your environment variables
-3. Install dependencies:
-   ```bash
-   # Frontend
-   cd frontend
-   npm install
+### 1. Clone the Repository
+```bash
+git clone <repository-url>
+cd simple-transcribe
+```
 
-   # Node.js Backend
-   cd backend/node-service
-   npm install
+### 2. Backend Setup
 
-   # Python Backend
-   cd backend/python-service
-   python -m venv venv
-   source venv/bin/activate  # or `venv\Scripts\activate` on Windows
-   pip install -r requirements.txt
-   ```
+#### Node.js Service
+```bash
+cd backend/node-service
 
-## Development
+# Install dependencies
+npm install
 
-### Local Development
+# Create .env file
+cp .env.example .env
 
-1. Start all services using Docker Compose:
-   ```bash
-   docker-compose up
-   ```
+# Start development server
+npm run dev
+```
 
-2. Access the services:
-   - Frontend: http://localhost:3000
-   - Node.js Backend: http://localhost:3001
-   - Python Backend: http://localhost:8000
+#### Python Service
+```bash
+cd backend/python-service
 
-### Manual Development
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: .\venv\Scripts\activate
 
-1. Start the frontend:
-   ```bash
-   cd frontend
-   npm run dev
-   ```
+# Install dependencies
+pip install -r requirements.txt
 
-2. Start the Node.js backend:
-   ```bash
-   cd backend/node-service
-   npm run dev
-   ```
+# Create .env file
+cp .env.example .env
 
-3. Start the Python backend:
-   ```bash
-   cd backend/python-service
-   source venv/bin/activate  # or `venv\Scripts\activate` on Windows
-   uvicorn main:app --reload
-   ```
+# Start development server
+uvicorn main:app --reload
+```
 
-## API Documentation
+### 3. Frontend Setup
+```bash
+cd frontend
 
-### Node.js Backend
+# Install dependencies
+npm install
 
-- `GET /health` - Health check endpoint
-- `POST /api/process-video` - Process a YouTube video
-- `GET /api/summary/:videoId` - Get video summary
+# Create .env.local file
+cp .env.example .env.local
 
-### Python Backend
+# Start development server
+npm run dev
+```
 
-- `GET /health` - Health check endpoint
-- `POST /process` - Process video and generate summary
+### 4. Environment Variables
+
+#### Backend (Node.js)
+```env
+PORT=3001
+PYTHON_SERVICE_URL=http://localhost:8000
+SUPABASE_URL=your_supabase_url
+SUPABASE_KEY=your_supabase_key
+LOG_LEVEL=info
+```
+
+#### Backend (Python)
+```env
+PORT=8000
+OPENAI_API_KEY=your_openai_api_key
+MODEL_PATH=path_to_whisper_model
+```
+
+#### Frontend
+```env
+NEXT_PUBLIC_API_URL=http://localhost:3001
+```
+
+## Deployment
+
+### 1. Backend Deployment (fly.io)
+
+#### Node.js Service
+```bash
+cd backend/node-service
+
+# Install flyctl
+curl -L https://fly.io/install.sh | sh
+
+# Login to fly.io
+flyctl auth login
+
+# Launch the app
+flyctl launch
+
+# Deploy
+flyctl deploy
+```
+
+#### Python Service
+```bash
+cd backend/python-service
+
+# Launch the app
+flyctl launch
+
+# Deploy
+flyctl deploy
+```
+
+### 2. Frontend Deployment (Vercel)
+
+```bash
+cd frontend
+
+# Install Vercel CLI
+npm i -g vercel
+
+# Deploy
+vercel
+```
+
+### 3. Database Setup (Supabase)
+
+1. Create a new project in Supabase
+2. Run the database migrations:
+```sql
+-- Create videos table
+CREATE TABLE videos (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    youtube_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+    url TEXT NOT NULL,
+    thumbnail TEXT,
+    status TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create transcripts table
+CREATE TABLE transcripts (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    video_id UUID REFERENCES videos(id),
+    text TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create summaries table
+CREATE TABLE summaries (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    video_id UUID REFERENCES videos(id),
+    text TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+## Monitoring and Logs
+
+### Node.js Service
+- Logs are stored in `backend/node-service/logs/`
+- Access logs: `combined.log`
+- Error logs: `error.log`
+
+### Python Service
+- Logs are available through the FastAPI logging system
+- Access logs through the service's stdout/stderr
 
 ## Contributing
 
-1. Create a new branch for your feature
-2. Make your changes
-3. Submit a pull request
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
 ## License
 
-ISC
+MIT License - see LICENSE file for details
