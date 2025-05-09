@@ -5,13 +5,21 @@ import { useQuery, useMutation, Query } from '@tanstack/react-query';
 import axios from 'axios';
 
 interface VideoDetails {
-  video: {
+  videoId: string;
+  hasTranscript: boolean;
+  hasSummary: boolean;
+  transcript?: {
     id: string;
-    title: string;
-    status: 'processing' | 'completed' | 'failed';
+    video_id: string;
+    text: string;
+    created_at: string;
   };
-  transcript: string | null;
-  summary: string | null;
+  summary?: {
+    id: string;
+    video_id: string;
+    text: string;
+    created_at: string;
+  };
 }
 
 const isValidYoutubeUrl = (url: string): boolean => {
@@ -45,13 +53,14 @@ export default function Home() {
     queryKey: ['video', videoId],
     queryFn: async () => {
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/summary/${videoId}`);
+      console.log('Received video details:', response.data);
       return response.data;
     },
     enabled: !!videoId,
     refetchInterval: (query: Query<VideoDetails>) => {
       const data = query.state.data;
       if (!data) return false;
-      return data.video.status === 'processing' ? 2000 : false;
+      return !(data.hasTranscript && data.hasSummary) ? 2000 : false;
     },
   });
 
@@ -97,33 +106,35 @@ export default function Home() {
         {videoDetails && (
           <div className="space-y-6">
             <div className="p-4 border rounded shadow-sm">
-              <h2 className="text-2xl font-semibold mb-2">{videoDetails.video.title}</h2>
+              <h2 className="text-2xl font-semibold mb-2">Video Details</h2>
               <p className="text-gray-600">
-                Status: <span className="font-medium">{videoDetails.video.status}</span>
+                Status: <span className="font-medium">
+                  {videoDetails.hasTranscript && videoDetails.hasSummary ? 'Completed' : 'Processing'}
+                </span>
               </p>
             </div>
 
-            {videoDetails.video.status === 'completed' && (
+            {videoDetails.hasTranscript && videoDetails.hasSummary && (
               <>
                 {videoDetails.summary && (
                   <div className="p-4 border rounded shadow-sm">
                     <h3 className="text-xl font-semibold mb-2">Summary</h3>
-                    <p className="whitespace-pre-wrap text-gray-700">{videoDetails.summary}</p>
+                    <p className="whitespace-pre-wrap text-gray-700">{videoDetails.summary.text}</p>
                   </div>
                 )}
 
                 {videoDetails.transcript && (
                   <div className="p-4 border rounded shadow-sm">
                     <h3 className="text-xl font-semibold mb-2">Transcript</h3>
-                    <p className="whitespace-pre-wrap text-gray-700">{videoDetails.transcript}</p>
+                    <p className="whitespace-pre-wrap text-gray-700">{videoDetails.transcript.text}</p>
                   </div>
                 )}
               </>
             )}
 
-            {videoDetails.video.status === 'failed' && (
-              <div className="p-4 border rounded bg-red-50 text-red-600">
-                Failed to process video. Please try again.
+            {!videoDetails.hasTranscript && !videoDetails.hasSummary && (
+              <div className="p-4 border rounded bg-yellow-50 text-yellow-600">
+                Processing video... This may take a few minutes.
               </div>
             )}
           </div>

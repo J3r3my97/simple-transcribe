@@ -50,24 +50,34 @@ export class VideoRepository {
     }
 
     async createTranscript(transcript: Omit<Transcript, 'id' | 'created_at'>): Promise<Transcript> {
+        console.log('[VideoRepository] Creating transcript for video:', transcript.video_id);
         const { data, error } = await this.supabase
             .from('transcripts')
             .insert(transcript)
             .select()
             .single();
 
-        if (error) throw error;
+        if (error) {
+            console.error('[VideoRepository] Error creating transcript:', error);
+            throw error;
+        }
+        console.log('[VideoRepository] Successfully created transcript:', data.id);
         return data;
     }
 
     async createSummary(summary: Omit<Summary, 'id' | 'created_at'>): Promise<Summary> {
+        console.log('[VideoRepository] Creating summary for video:', summary.video_id);
         const { data, error } = await this.supabase
             .from('summaries')
             .insert(summary)
             .select()
             .single();
 
-        if (error) throw error;
+        if (error) {
+            console.error('[VideoRepository] Error creating summary:', error);
+            throw error;
+        }
+        console.log('[VideoRepository] Successfully created summary:', data.id);
         return data;
     }
 

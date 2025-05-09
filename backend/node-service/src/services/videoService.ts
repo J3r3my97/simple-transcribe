@@ -5,9 +5,10 @@ import { VideoRepository } from '../repositories/videoRepository';
 import { Video } from '../types/database';
 
 interface PythonServiceResponse {
-    status: 'completed' | 'failed';
+    status: 'processing' | 'completed' | 'failed';
     transcript?: string;
     summary?: string;
+    error?: string;
 }
 
 interface YouTubeDlOutput {
@@ -167,50 +168,74 @@ export class VideoService {
     }
 
     private async processVideoInBackground(video: Video): Promise<void> {
-        console.log('[VideoService] Starting background processing for video:', video.id);
         try {
-            // Send to Python service for processing
-            console.log('[VideoService] Sending to Python service:', this.pythonServiceUrl);
+            console.log('[VideoService] Starting background processing for video:', video.id);
+            const videoId = video.id;
+            const videoExists = await this.videoRepository.getVideoById(videoId);
+            if (!videoExists) {
+                console.error('[VideoService] Video not found:', videoId);
+                throw new Error('Video not found');
+            }
+
+            console.log('[VideoService] Sending request to Python service for video:', videoId);
             const response = await axios.post<PythonServiceResponse>(`${this.pythonServiceUrl}/process`, {
-                video_id: video.id,
+                video_id: videoId,
                 url: video.url,
             });
-            console.log('[VideoService] Got response from Python service:', response.data.status);
+            console.log('[VideoService] Received response from Python service:', response.data.status);
 
             if (response.data.status === 'completed') {
                 console.log('[VideoService] Processing completed, updating video status');
-                // Update video status
-                await this.videoRepository.updateVideoStatus(video.id, 'completed');
+                await this.videoRepository.updateVideoStatus(videoId, 'completed');
 
-                // Save transcript
                 if (response.data.transcript) {
-                    console.log('[VideoService] Saving transcript');
+                    console.log('[VideoService] Saving transcript for video:', videoId);
                     await this.videoRepository.createTranscript({
-                        video_id: video.id,
+                        video_id: videoId,
                         text: response.data.transcript,
                     });
                 }
 
-                // Save summary
                 if (response.data.summary) {
-                    console.log('[VideoService] Saving summary');
+                    console.log('[VideoService] Saving summary for video:', videoId);
                     await this.videoRepository.createSummary({
-                        video_id: video.id,
+                        video_id: videoId,
                         text: response.data.summary,
                     });
                 }
+                console.log('[VideoService] Successfully saved all data for video:', videoId);
             } else {
-                console.error('[VideoService] Processing failed in Python service');
-                throw new Error('Processing failed');
+                console.error('[VideoService] Processing failed:', response.data.error);
+                await this.videoRepository.updateVideoStatus(videoId, 'failed');
             }
         } catch (error) {
             console.error('[VideoService] Error in background processing:', error);
             await this.videoRepository.updateVideoStatus(video.id, 'failed');
+            throw error;
         }
     }
 
     async getVideoDetails(id: string) {
         console.log('[VideoService] Getting video details:', id);
-        return this.videoRepository.getVideoWithDetails(id);
+        const details = await this.videoRepository.getVideoWithDetails(id);
+
+        // Format response to match frontend expectations
+        const response = {
+            videoId: details.video.id,
+            hasTranscript: !!details.transcript,
+            hasSummary: !!details.summary,
+            transcript: details.transcript,
+            summary: details.summary
+        };
+
+        console.log('[VideoService] Returning formatted response:', {
+            videoId: response.videoId,
+            hasTranscript: response.hasTranscript,
+            hasSummary: response.hasSummary,
+            transcriptLength: response.transcript?.text.length,
+            summaryLength: response.summary?.text.length
+        });
+
+        return response;
     }
 } 
