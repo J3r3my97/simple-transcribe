@@ -8,6 +8,12 @@ import { Database } from './types/database';
 
 dotenv.config();
 
+// Debug logging
+console.log('Environment variables:', {
+    SUPABASE_URL: process.env.SUPABASE_URL,
+    PYTHON_SERVICE_URL: process.env.PYTHON_SERVICE_URL
+});
+
 const app = express();
 const port = process.env.PORT || 3001;
 
@@ -16,8 +22,13 @@ app.use(cors());
 app.use(express.json());
 
 // Initialize Supabase client
-const supabaseUrl = process.env.SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_KEY!;
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Missing required environment variables: SUPABASE_URL or SUPABASE_SERVICE_KEY');
+}
+
 const supabase = createClient<Database>(supabaseUrl, supabaseKey);
 
 // Initialize services
