@@ -22,10 +22,22 @@ if ! command_exists docker-compose; then
     exit 1
 fi
 
-# Check if .env file exists
-if [ ! -f .env ]; then
-    echo -e "${RED}Error: .env file not found${NC}"
-    echo "Please create a .env file with the required environment variables"
+# Check if service-specific .env files exist
+if [ ! -f "backend/node-service/.env" ]; then
+    echo -e "${RED}Error: Node.js backend .env file not found${NC}"
+    echo "Please create backend/node-service/.env with the required environment variables"
+    exit 1
+fi
+
+if [ ! -f "backend/python-service/.env" ]; then
+    echo -e "${RED}Error: Python backend .env file not found${NC}"
+    echo "Please create backend/python-service/.env with the required environment variables"
+    exit 1
+fi
+
+if [ ! -f "frontend/.env.local" ]; then
+    echo -e "${RED}Error: Frontend .env.local file not found${NC}"
+    echo "Please create frontend/.env.local with the required environment variables"
     exit 1
 fi
 

@@ -10,6 +10,8 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
+    env_file:
+      - ./frontend/.env.local
     environment:
       - NODE_ENV=development
     depends_on:
@@ -24,6 +26,8 @@ services:
     volumes:
       - ./backend/node-service:/app
       - /app/node_modules
+    env_file:
+      - ./backend/node-service/.env
     environment:
       - NODE_ENV=development
       - PYTHON_SERVICE_URL=http://python-backend:8000
@@ -38,6 +42,7 @@ services:
       - "8000:8000"
     volumes:
       - ./backend/python-service:/app
+    env_file:
+      - ./backend/python-service/.env
     environment:
       - PYTHONUNBUFFERED=1
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
