@@ -1,0 +1,43 @@
+# flyctl launch added from .gitignore
+# Virtual Environment
+**/venv
+**/env
+**/.env
+
+# Python
+**/__pycache__
+**/*.py[cod]
+**/*$py.class
+**/*.so
+**/.Python
+**/build
+**/develop-eggs
+**/dist
+**/downloads
+**/eggs
+**/.eggs
+**/lib
+**/lib64
+**/parts
+**/sdist
+**/var
+**/wheels
+**/*.egg-info
+**/.installed.cfg
+**/*.egg
+
+# Whisper model files
+**/*.pt
+**/*.bin
+**/models
+
+# IDE
+**/.idea
+**/.vscode
+**/*.swp
+**/*.swo
+
+# OS
+**/.DS_Store
+**/Thumbs.db 
+fly.toml
