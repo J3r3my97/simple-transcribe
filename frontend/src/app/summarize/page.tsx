@@ -5,7 +5,7 @@ import { useQuery, useMutation, Query } from '@tanstack/react-query';
 import axios from 'axios';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { createSupabaseClient } from '../../../lib/supabase'
+import { createSupabaseClient } from '@/lib/supabase'
 
 interface VideoDetails {
     videoId: string;
