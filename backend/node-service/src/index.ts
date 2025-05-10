@@ -8,11 +8,13 @@ import { Database } from './types/database';
 
 dotenv.config();
 
-// Debug logging
-console.log('Environment variables:', {
-    SUPABASE_URL: process.env.SUPABASE_URL,
-    PYTHON_SERVICE_URL: process.env.PYTHON_SERVICE_URL
-});
+// Detailed debug logging
+console.log('==== Environment Debug Info ====');
+console.log('SUPABASE_URL length:', process.env.SUPABASE_URL?.length || 0);
+console.log('SUPABASE_SERVICE_KEY length:', process.env.SUPABASE_SERVICE_KEY?.length || 0);
+console.log('SUPABASE_SERVICE_KEY prefix:', process.env.SUPABASE_SERVICE_KEY?.substring(0, 20) + '...');
+console.log('PYTHON_SERVICE_URL:', process.env.PYTHON_SERVICE_URL);
+console.log('============================');
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -26,10 +28,34 @@ const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
+    console.error('Missing environment variables:', {
+        hasUrl: !!supabaseUrl,
+        hasKey: !!supabaseKey
+    });
     throw new Error('Missing required environment variables: SUPABASE_URL or SUPABASE_SERVICE_KEY');
 }
 
-const supabase = createClient<Database>(supabaseUrl, supabaseKey);
+console.log('Initializing Supabase client with URL:', supabaseUrl);
+// Add debug log for key format
+console.log('Service key format check:', {
+    startsWithEyJ: supabaseKey.startsWith('eyJ'),
+    containsBearer: supabaseKey.toLowerCase().includes('bearer'),
+    length: supabaseKey.length
+});
+
+// Initialize Supabase client with apiKey
+const supabase = createClient<Database>(supabaseUrl, supabaseKey, {
+    auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+        detectSessionInUrl: false
+    },
+    global: {
+        headers: {
+            'apikey': supabaseKey
+        }
+    }
+});
 
 // Initialize services
 const videoRepository = new VideoRepository(supabase);

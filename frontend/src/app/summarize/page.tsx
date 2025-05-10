@@ -5,7 +5,7 @@ import { useQuery, useMutation, Query } from '@tanstack/react-query';
 import axios from 'axios';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+import { createSupabaseClient } from '@/lib/supabase'
 
 interface VideoDetails {
     videoId: string;
@@ -36,6 +36,7 @@ export default function Summarize() {
     const [error, setError] = useState<string | null>(null);
     const { user, signOut } = useAuth();
     const router = useRouter();
+    const supabase = createSupabaseClient();
 
     useEffect(() => {
         if (!user) {
@@ -103,11 +104,19 @@ export default function Summarize() {
         },
     });
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setError(null);
-        if (url) {
+        try {
+            if (!url) {
+                throw new Error('Please enter a YouTube URL');
+            }
+            if (!isValidYoutubeUrl(url)) {
+                throw new Error('Please enter a valid YouTube URL');
+            }
+            const { data: { session } } = await supabase.auth.getSession();
             processVideo.mutate(url);
+        } catch (error) {
+            setError(error instanceof Error ? error.message : 'Failed to process video');
         }
     };
 
