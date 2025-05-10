@@ -21,6 +21,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         if (!supabase) {
             console.error('Supabase client is not initialized')
+            setLoading(false)
             return
         }
         console.log('Supabase client initialized successfully')
@@ -39,7 +40,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     if (event === 'SIGNED_IN' && session) {
                         console.log('User signed in, setting user state:', session.user.email)
                         setUser(session.user)
-                        // Force a state update to ensure the change is propagated
                         setLoading(false)
                     } else if (event === 'SIGNED_OUT') {
                         console.log('User signed out, clearing user state')
@@ -56,6 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     const { data: { session }, error } = await supabase.auth.getSession()
                     if (error) {
                         console.error('Error checking session:', error)
+                        setLoading(false)
                         return
                     }
                     console.log('Existing session found:', {
@@ -66,10 +67,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     if (session) {
                         console.log('Setting user from existing session:', session.user.email)
                         setUser(session.user)
-                        setLoading(false)
                     }
+                    setLoading(false)
                 } catch (err) {
                     console.error('Error in checkSession:', err)
+                    setLoading(false)
                 }
             }
             checkSession()
