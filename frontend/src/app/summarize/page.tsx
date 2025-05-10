@@ -5,7 +5,7 @@ import { useQuery, useMutation, Query } from '@tanstack/react-query';
 import axios from 'axios';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { createSupabaseClient } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 
 interface VideoDetails {
     videoId: string;
@@ -36,7 +36,6 @@ export default function Summarize() {
     const [error, setError] = useState<string | null>(null);
     const { user, signOut } = useAuth();
     const router = useRouter();
-    const supabase = createSupabaseClient();
 
     useEffect(() => {
         if (!user) {

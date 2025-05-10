@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { User } from '@supabase/supabase-js'
-import { createSupabaseClient } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 
 interface AuthContextType {
     user: User | null
@@ -15,7 +15,15 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null)
     const [loading, setLoading] = useState(true)
-    const supabase = createSupabaseClient()
+
+    // Verify Supabase client initialization
+    useEffect(() => {
+        if (!supabase) {
+            console.error('Supabase client is not initialized')
+            return
+        }
+        console.log('Supabase client initialized successfully')
+    }, [])
 
     useEffect(() => {
         try {
@@ -30,6 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     if (event === 'SIGNED_IN' && session) {
                         console.log('User signed in, setting user state:', session.user.email)
                         setUser(session.user)
+                        // Force a state update to ensure the change is propagated
                         setLoading(false)
                     } else if (event === 'SIGNED_OUT') {
                         console.log('User signed out, clearing user state')
@@ -72,7 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.error('Error in auth setup:', err)
             setLoading(false)
         }
-    }, [supabase])
+    }, [])
 
     const signIn = async (email: string, password: string): Promise<void> => {
         try {
@@ -94,6 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 console.log('AuthContext: Setting user after successful sign in:', data.session.user.email)
                 setUser(data.session.user)
                 console.log('AuthContext: User state updated:', data.session.user.email)
+                // Force a state update to ensure the change is propagated
                 setLoading(false)
             } else {
                 console.error('AuthContext: No session in sign in response')
