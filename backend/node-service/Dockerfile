@@ -3,6 +3,9 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Install Python
+RUN apk add --no-cache python3
+
 # Copy package files
 COPY package*.json ./
 
@@ -19,6 +22,9 @@ RUN npm run build
 FROM node:20-alpine
 
 WORKDIR /app
+
+# Install Python
+RUN apk add --no-cache python3
 
 # Copy package files
 COPY package*.json ./
